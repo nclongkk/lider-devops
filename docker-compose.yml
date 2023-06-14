@@ -1,9 +1,78 @@
+version: "3"
 services:
-  nginx:
-    image: nginx
-    container_name: nginx
+  redis:
+    image: redis:latest
+    networks:
+      - lider-network
     ports:
-      - 80:80
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-    #   - ./main.conf:/etc/nginx/conf.d/main.conf
+      - 6379:6379
+
+  auth:
+    image: nclongkk/lider-auth-service:latest
+    depends_on:
+      - redis
+    networks:
+      - lider-network
+    ports:
+      - 4001:4001
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+  payment:
+    image: nclongkk/lider-payment-service:latest
+    depends_on:
+      - redis
+    networks:
+      - lider-network
+    ports:
+      - 4002:4002
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+  app:
+    image: nclongkk/lider-app-service:latest
+    depends_on:
+      - redis
+    networks:
+      - lider-network
+    ports:
+      - 4003:4003
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+  laas-fe:
+    image: nclongkk/lider-laas-fe:latest
+    networks:
+      - lider-network
+    ports:
+      - 3000:3000
+
+  meeting:
+    image: nclongkk/lider-meeting-fe:latest
+    networks:
+      - lider-network
+    ports:
+      - 3001:3001
+
+  doc:
+    image: nclongkk/lider-doc-fe:latest
+    networks:
+      - lider-network
+    ports:
+      - 3002:3002
+
+  stream:
+    image: nclongkk/lider-stream-service:latest
+    depends_on:
+      - redis
+    networks:
+      - lider-network
+    ports:
+      - 5001:5001
+
+networks:
+  lider-network:
+    driver: bridge
